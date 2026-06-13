@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Mars Topographical Globe</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        function createMarsGlobe() {
+            const textureLoader = new THREE.TextureLoader();
+            const marsTexture = textureLoader.load('https://mars.nasa.gov/system/news_items/main_images/9332_PIA25681-web.jpg');
+            const displacementMap = textureLoader.load('https://astrogeology.usgs.gov/cache/images/8d80b8e0392eb72d4c7f7c2c6f1c5d49_marstopo_1m.jpg');
+            
+            const material = new THREE.MeshStandardMaterial({
+                map: marsTexture,
+                displacementMap: displacementMap,
+                displacementScale: 0.6,
+                bumpMap: displacementMap,
+                bumpScale: 0.3
+            });
+            
+            const sphereGeometry = new THREE.SphereGeometry(5, 256, 256);
+            const marsGlobe = new THREE.Mesh(sphereGeometry, material);
+            scene.add(marsGlobe);
+        }
+
+        const light = new THREE.DirectionalLight(0xffffff, 2);
+        light.position.set(10, 10, 10).normalize();
+        scene.add(light);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+        scene.add(ambientLight);
+
+        createMarsGlobe();
+        
+        camera.position.z = 10;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            controls.update();
+        }
+
+        animate();
+    </script>
+</body>
+</html>
