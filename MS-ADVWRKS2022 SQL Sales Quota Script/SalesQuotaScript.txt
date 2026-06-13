@@ -1,0 +1,36 @@
+SELECT 
+    EMP.EmployeeKey,
+    EMP.FirstName + ' ' + EMP.LastName AS Employee,
+    EMP.Title AS Position,
+    EMP.DepartmentName,
+    ISNULL(FORMAT(MAX(FSQ.SalesAmountQuota), 'C'), 0) AS SalesQuota,
+    FORMAT(
+    ISNULL(ROUND(SUM(FRS.SalesAmount - FRS.TotalProductCost), 2), 0),
+    'C'
+) AS Profit,
+    ISNULL(FORMAT(SUM(FRS.SalesAmount), 'C'), 0) AS TotalSales,
+    ISNULL(
+    CAST(
+        ROUND(SUM(FRS.SalesAmount) / NULLIF(MAX(FSQ.SalesAmountQuota), 0) * 100, 2)
+        AS varchar(20)
+    ) + '%',
+    'No Quota'
+) AS QuotaPercent,
+    CASE
+    WHEN SUM(FRS.SalesAmount) >= MAX(FSQ.SalesAmountQuota)
+        THEN 'Met Quota'
+    ELSE 'Did Not Meet Quota'
+END AS QuotaStatus
+FROM dbo.DimEmployee EMP
+LEFT JOIN dbo.FactResellerSales FRS
+    ON EMP.EmployeeKey = FRS.EmployeeKey
+LEFT JOIN dbo.FactSalesQuota FSQ
+    ON EMP.EmployeeKey = FSQ.EmployeeKey
+WHERE EMP.DepartmentName = 'Sales'
+GROUP BY
+    EMP.EmployeeKey,
+    EMP.FirstName,
+    EMP.LastName,
+    EMP.Title,
+    EMP.DepartmentName
+ORDER BY Profit DESC;
